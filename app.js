@@ -1,4 +1,4 @@
-/* ===== AthletePro v2 — App Logic (with Ollama AI Coach) ===== */
+/* ===== AthletePro v2 — App Logic ===== */
 
 /* ---------- DATA ---------- */
 const SPORTS = {
@@ -915,29 +915,6 @@ const HABITS = [
   { icon:"🧘", name:"Stretch / mobility (10 min)", goal:1, unit:"day" }
 ];
 
-const AI_QUICK = [
-  "Make me a 7-day football training + diet plan",
-  "How do I get six-pack abs in 8 weeks?",
-  "Best diet for cricket match day?",
-  "I'm sore after leg day — what should I do?",
-  "Kho kho speed & dodging program for beginners",
-  "Basketball vertical jump: 4-week plan",
-  "How much protein do I need per day?",
-  "Home workout with no equipment, 20 min"
-];
-
-const OLLAMA_URL = "http://127.0.0.1:11434";
-const SYSTEM_PROMPT = `You are AthletePro AI Coach, an expert sports trainer and nutritionist embedded in the AthletePro app.
-You know football, cricket, kho kho, basketball, gym/strength training, abs/core work, warm-ups, recovery and diet planning.
-Rules:
-- Be practical, encouraging and concise. Use short paragraphs and simple bullet lists with "-" or numbers.
-- Give specific sets, reps, durations, loads and calories when relevant.
-- Adapt answers to the user's sport, level and goal.
-- For diet: mention protein/carb/fat targets and simple meal ideas.
-- If the user gives stats (age, weight, goal), calculate numbers for them.
-- Answer in the same language the user writes in.
-- Do not invent medical diagnoses; advise seeing a professional for pain/injury.`;
-
 /* ---------- PLAN INFO (rich material for every activity) ---------- */
 const TAG_INFO = {
   Speed:{equip:"Cones, stopwatch, flat ground",muscles:"Quads · glutes · hamstrings · calves",coach:["Explode out of every rep — quality over quantity","Full recovery 60–90 sec between max efforts","Stay relaxed: fast arms = fast legs"],mistakes:["Skipping the warm-up","Training at 90% instead of maximum","No cooldown jog"]},
@@ -1131,7 +1108,6 @@ let waterLog  = store.get("waterLog", {});
 let habitsLog = store.get("habitsLog", {});
 let streak    = store.get("streak", 0);
 let lastActive= store.get("lastActive", "");
-let chatLog   = store.get("chatLog", []);
 
 const todayKey = () => new Date().toISOString().slice(0,10);
 
@@ -1180,12 +1156,11 @@ function renderDashboard(){
       <div class="float">🏆</div>
       <div class="head-badge" style="background:var(--grad-main)">Today · ${new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</div>
       <h2>Welcome back, Athlete! Ready to <span class="grad">train hard</span>? 💪</h2>
-      <p><b>${allPlans} training plans</b> — Pro-level Football (Lamine Yamal tier 🔥), Cricket, Kho Kho, Basketball, Gym, Abs, Recovery &amp; <b>Home Training</b> — plus a local <b>AI Coach</b> that builds your personalized plan.</p>
+      <p><b>${allPlans} training plans</b> — Pro-level Football (Lamine Yamal tier 🔥), Cricket, Kho Kho, Basketball, Gym, Abs, Recovery &amp; <b>Home Training</b> — every activity with step-by-step coaching.</p>
       <div class="btn-row" style="width:auto">
         <button class="btn btn-primary" onclick="go('football')">⚽ Pro Football →</button>
         <button class="btn btn-green" onclick="go('home')" style="width:auto">🏠 Train at Home</button>
         <button class="btn btn-ghost" onclick="surpriseMe()" style="width:auto">🎲 Surprise Me</button>
-        <button class="btn btn-ghost" onclick="go('ai')" style="width:auto">🧠 AI Coach</button>
       </div>
     </div>
 
@@ -1355,9 +1330,6 @@ function renderDiet(){
       <div class="card"><h3>🚫 Avoid These</h3>
         ${DIET.avoid.map(a=>`<div class="food-row"><span>❌ ${a}</span></div>`).join("")}
         <div class="food-row" style="margin-top:6px"><span>💧 ${DIET.water}</span></div>
-        <div class="btn-row" style="margin-top:14px">
-          <button class="btn btn-ghost" onclick="go('ai')">🧠 Get AI Custom Diet</button>
-        </div>
       </div>
     </div>`;
   $("#content").appendChild(page);
@@ -1601,7 +1573,7 @@ function renderProgress(){
 
   page.querySelector("#exportBtn").addEventListener("click",()=>{
     const data = {};
-    ["completed","waterLog","habitsLog","streak","lastActive","planner","fav","weights","theme","aiModel","chatLog"].forEach(k=>data[k]=store.get(k,null));
+    ["completed","waterLog","habitsLog","streak","lastActive","planner","fav","weights","theme"].forEach(k=>data[k]=store.get(k,null));
     const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -1623,224 +1595,6 @@ function renderProgress(){
     };
     rd.readAsText(f);
   });
-}
-
-/* ================= AI COACH (OLLAMA) ================= */
-let ollamaModels = [];
-let aiBusy = false;
-
-async function checkOllama(){
-  try{
-    const r = await fetch(OLLAMA_URL+"/api/tags");
-    const j = await r.json();
-    // only LOCAL models — cloud/remote models require Ollama sign-in (HTTP 401)
-    ollamaModels = (j.models||[]).filter(m=>!m.remote_model && !/:cloud/i.test(m.name)).map(m=>m.name);
-    const st = $("#aiStatus");
-    st.className = "ai-status on";
-    st.querySelector("span").textContent = "AI online · " + (ollamaModels.length||0) + " local model" + (ollamaModels.length===1?"":"s");
-    const saved = store.get("aiModel","");
-    if(saved && !ollamaModels.includes(saved)) store.set("aiModel", ollamaModels[0]||"");
-    if(!saved && ollamaModels.length) store.set("aiModel", ollamaModels[0]);
-    return true;
-  }catch(e){
-    const st = $("#aiStatus");
-    st.className = "ai-status off";
-    st.querySelector("span").textContent = "AI offline · start Ollama";
-    return false;
-  }
-}
-
-function renderAI(){
-  const page = el("div");
-  page.innerHTML = `
-    <div class="ai-hero">
-      <div class="brain">🧠</div>
-      <div class="head-badge" style="background:var(--grad-main)">Local AI · Ollama</div>
-      <h2>Your Personal AI Coach</h2>
-      <p>Powered by <b>Ollama running on your own system</b> — 100% private. Ask for training plans, diet advice, recovery tips or technique help for any sport in the app.</p>
-      <div class="model-row">
-        <select class="model-select" id="modelSelect"><option>Loading models…</option></select>
-        <button class="btn btn-ghost" id="refreshModels" style="width:auto;padding:11px 18px">↻ Refresh</button>
-      </div>
-    </div>
-
-    <div class="quick-chips">
-      ${AI_QUICK.map(q=>`<button class="q-chip" data-q="${q.replace(/"/g,'&quot;')}">${q}</button>`).join("")}
-    </div>
-
-    <div class="chat-box">
-      <div class="chat-head">
-        <div class="avatar">🧠</div>
-        <div>
-          <h4>AthletePro AI Coach</h4>
-          <small id="chatStatus"><i></i> Ready</small>
-        </div>
-        <button class="chat-clear" id="clearChat">Clear chat</button>
-      </div>
-      <div class="chat-msgs" id="chatMsgs"></div>
-      <div class="chat-input">
-        <textarea id="chatInput" placeholder="Ask anything… e.g. 'Build a 5-day gym split for me, I'm 70 kg, goal: muscle gain'"></textarea>
-        <button class="send-btn" id="sendBtn" title="Send">➤</button>
-      </div>
-    </div>`;
-  $("#content").appendChild(page);
-
-  // models
-  const sel = page.querySelector("#modelSelect");
-  const fillModels = ()=>{
-    if(!ollamaModels.length){
-      sel.innerHTML = `<option value="">No models found — start Ollama</option>`;
-      return;
-    }
-    const saved = store.get("aiModel","");
-    sel.innerHTML = ollamaModels.map(m=>`<option value="${m}" ${m===saved?"selected":""}>${m}</option>`).join("");
-    if(!saved) store.set("aiModel", ollamaModels[0]);
-  };
-  fillModels();
-  page.querySelector("#refreshModels").addEventListener("click", async ()=>{
-    const ok = await checkOllama();
-    fillModels();
-    toast(ok ? "Models refreshed ✅" : "Ollama not reachable ❌");
-  });
-  sel.addEventListener("change",()=>store.set("aiModel", sel.value));
-
-  // messages
-  renderChatLog();
-
-  // send
-  const input = page.querySelector("#chatInput");
-  const send = ()=>sendChat(input);
-  page.querySelector("#sendBtn").addEventListener("click", send);
-  input.addEventListener("keydown", e=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }});
-  page.querySelectorAll(".q-chip").forEach(c=>c.addEventListener("click",()=>{
-    input.value = c.dataset.q; send();
-  }));
-  page.querySelector("#clearChat").addEventListener("click",()=>{
-    chatLog=[]; store.set("chatLog",chatLog); renderChatLog(); toast("Chat cleared");
-  });
-}
-
-function renderChatLog(){
-  const box = document.getElementById("chatMsgs");
-  if(!box) return;
-  box.innerHTML = "";
-  if(!chatLog.length){
-    box.innerHTML = `
-      <div class="msg bot">
-        <div class="m-avatar">🧠</div>
-        <div class="bubble">Hi! I'm your <b>local AI Coach</b> running on Ollama. 🏋️
-
-I can build:
-• <b>Weekly training plans</b> (football, cricket, kho kho, basketball)
-• <b>Gym & abs programs</b> matched to your level
-• <b>Diet & macro plans</b> for muscle gain or fat loss
-• <b>Recovery & injury-prevention</b> advice
-
-Ask me anything!</div>
-      </div>`;
-    box.scrollTop = box.scrollHeight;
-    return;
-  }
-  chatLog.forEach(m=>{
-    const div = el("div", "msg " + (m.role==="user"?"user":"bot"));
-    div.innerHTML = `<div class="m-avatar">${m.role==="user"?"🙋":"🧠"}</div><div class="bubble"></div>`;
-    div.querySelector(".bubble").textContent = m.content;
-    box.appendChild(div);
-  });
-  box.scrollTop = box.scrollHeight;
-}
-
-async function sendChat(inputEl){
-  if(aiBusy) return;
-  const text = (inputEl.value||"").trim();
-  if(!text) return;
-
-  const online = await checkOllama();
-  if(!online){
-    toast("Ollama is offline — start it with: ollama serve");
-    return;
-  }
-  const model = store.get("aiModel","") || ollamaModels[0];
-  if(!model){ toast("No Ollama model available"); return; }
-
-  // push user msg
-  chatLog.push({role:"user", content:text});
-  store.set("chatLog", chatLog);
-  inputEl.value = "";
-  renderChatLog();
-  aiBusy = true;
-  setSendState(true);
-
-  const box = document.getElementById("chatMsgs");
-  const status = document.getElementById("chatStatus");
-  if(status) status.innerHTML = "<i></i> Thinking…";
-
-  // typing indicator
-  const typing = el("div","msg bot");
-  typing.id = "typingMsg";
-  typing.innerHTML = `<div class="m-avatar">🧠</div><div class="bubble"><div class="typing"><i></i><i></i><i></i></div></div>`;
-  box.appendChild(typing);
-  box.scrollTop = box.scrollHeight;
-
-  const messages = [
-    {role:"system", content:SYSTEM_PROMPT},
-    ...chatLog.slice(-14).map(m=>({role:m.role, content:m.content}))
-  ];
-
-  try{
-    const res = await fetch(OLLAMA_URL+"/api/chat", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ model, messages, stream:true })
-    });
-    if(res.status===401) throw new Error("This model needs an Ollama sign-in — pick a local model in the dropdown above");
-    if(!res.ok) throw new Error("HTTP "+res.status);
-
-    // replace typing with real bot bubble
-    typing.remove();
-    const botDiv = el("div","msg bot");
-    botDiv.innerHTML = `<div class="m-avatar">🧠</div><div class="bubble"></div>`;
-    const bubble = botDiv.querySelector(".bubble");
-    box.appendChild(botDiv);
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "", full = "";
-    while(true){
-      const {done, value} = await reader.read();
-      if(done) break;
-      buffer += decoder.decode(value, {stream:true});
-      const lines = buffer.split("\n");
-      buffer = lines.pop();
-      for(const line of lines){
-        if(!line.trim()) continue;
-        try{
-          const j = JSON.parse(line);
-          const piece = j.message?.content || "";
-          if(piece){
-            full += piece;
-            bubble.textContent = full;
-            box.scrollTop = box.scrollHeight;
-          }
-        }catch(e){}
-      }
-    }
-    chatLog.push({role:"assistant", content: full || "(no response)"});
-    store.set("chatLog", chatLog);
-    if(status) status.innerHTML = "<i></i> Ready";
-  }catch(err){
-    typing.remove();
-    toast("AI error: " + err.message);
-    if(status) status.innerHTML = "<i></i> Error";
-  }finally{
-    aiBusy = false;
-    setSendState(false);
-    box.scrollTop = box.scrollHeight;
-  }
-}
-function setSendState(busy){
-  const b = document.getElementById("sendBtn");
-  if(b) b.disabled = busy;
 }
 
 /* ---------- ACTIVITY DETAIL (rich view) ---------- */
@@ -2175,7 +1929,6 @@ function go(page){
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active", b.dataset.page===page));
   $("#content").innerHTML="";
   if(page==="dashboard") renderDashboard();
-  else if(page==="ai") renderAI();
   else if(page==="planner") renderPlanner();
   else if(page==="progress") renderProgress();
   else if(page==="guide") renderGuide();
@@ -2203,7 +1956,7 @@ function runSearch(q){
   const page=el("div");
   if(!results.length){
     page.innerHTML=`<div class="empty"><div class="big">🔍</div><h3>No results for "${q}"</h3><p>Try: sprint, plank, protein, bowling, dunk, dodge, mobility…</p>
-      <div class="btn-row" style="max-width:340px;margin:18px auto 0"><button class="btn btn-ghost" onclick="go('ai')">🧠 Ask the AI Coach instead</button></div></div>`;
+      </div>`;
   }else{
     page.innerHTML=`
       <div class="page-head"><h2>Search results</h2><p>${results.length} match(es) for "${q}"</p></div>
@@ -2232,7 +1985,6 @@ function init(){
 
   document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>go(b.dataset.page)));
   $("#menuToggle").addEventListener("click",()=>$("#sidebar").classList.toggle("open"));
-  $("#askAiBtn").addEventListener("click",()=>go("ai"));
 
   const theme=store.get("theme","dark");
   if(theme==="light"){ document.body.classList.add("light"); $("#themeToggle").textContent="☀️"; }
@@ -2251,6 +2003,5 @@ function init(){
   $("#searchInput").addEventListener("input",e=>{ clearTimeout(sT); sT=setTimeout(()=>runSearch(e.target.value),250); });
 
   go("dashboard");
-  checkOllama();
 }
 init();

@@ -14,7 +14,6 @@ A complete, fully client-side training app — no build step, no server, works a
 - 🧮 **Body Tools** — 1RM, BMI, macro targets, weight tracker
 - 📅 **Weekly Planner** · 📊 **Progress & Stats** with achievements
 - ⭐ Favorites · 🎲 Surprise Me · 🔊 timer beeps · ⬇ export/import backup
-- 🧠 **AI Coach** (optional) — connects to a local [Ollama](https://ollama.com) instance on `127.0.0.1:11434`; works when you run it locally, shows "offline" otherwise
 
 ## Run locally
 Double-click `Start-Trainer.bat` (or `python -m http.server`).

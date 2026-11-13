@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AthletePro — Sports & Body Trainer</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
-  <link rel="stylesheet" href="styles.css?v=2" />
+  <link rel="stylesheet" href="styles.css?v=3" />
 </head>
 <body>
 
@@ -34,7 +34,6 @@
       <button class="nav-btn" data-page="recovery"><span>🧘</span> Warm-up &amp; Recovery</button>
       <button class="nav-btn" data-page="home"><span>🏠</span> Home Training</button>
       <div class="nav-label">Intelligence</div>
-      <button class="nav-btn" data-page="ai"><span>🧠</span> AI Coach <em class="ai-dot"></em></button>
       <button class="nav-btn" data-page="planner"><span>📅</span> Weekly Plan</button>
       <button class="nav-btn" data-page="progress"><span>📊</span> Progress &amp; Stats</button>
       <div class="nav-label">Fuel</div>
@@ -53,7 +52,6 @@
           <small>day streak</small>
         </div>
       </div>
-      <div class="ai-status" id="aiStatus"><i></i><span>Checking AI…</span></div>
     </div>
   </aside>
 
@@ -65,7 +63,6 @@
         <input type="text" id="searchInput" placeholder="Search exercises, drills, foods… (e.g. sprint, plank, protein)" />
       </div>
       <div class="topbar-right">
-        <button class="ask-ai" id="askAiBtn">🧠 Ask AI Coach</button>
         <div class="date-chip" id="dateChip"></div>
         <button class="icon-btn" id="themeToggle" title="Toggle theme">🌙</button>
       </div>
@@ -85,6 +82,6 @@
   <!-- ===== TOAST ===== -->
   <div class="toast" id="toast"></div>
 
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
