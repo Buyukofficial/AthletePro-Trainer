@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AthletePro — Sports & Body Trainer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo">⚡</div>
+      <div>
+        <h1>AthletePro</h1>
+        <p>Sports &amp; Body Trainer</p>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-btn active" data-page="dashboard"><span>🏠</span> Dashboard</button>
+      <div class="nav-label">Sports Training</div>
+      <button class="nav-btn" data-page="football"><span>⚽</span> Football</button>
+      <button class="nav-btn" data-page="cricket"><span>🏏</span> Cricket</button>
+      <button class="nav-btn" data-page="khokho"><span>🏃</span> Kho Kho</button>
+      <button class="nav-btn" data-page="basketball"><span>🏀</span> Basketball</button>
+      <button class="nav-btn" data-page="speed"><span>🎯</span> Speed &amp; Agility</button>
+      <button class="nav-btn" data-page="combat"><span>🥊</span> Cardio Combat</button>
+      <div class="nav-label">Body Training</div>
+      <button class="nav-btn" data-page="gym"><span>🏋️</span> Gym / Full Body</button>
+      <button class="nav-btn" data-page="abs"><span>💪</span> Abs &amp; Core</button>
+      <button class="nav-btn" data-page="recovery"><span>🧘</span> Warm-up &amp; Recovery</button>
+      <button class="nav-btn" data-page="home"><span>🏠</span> Home Training</button>
+      <div class="nav-label">Intelligence</div>
+      <button class="nav-btn" data-page="ai"><span>🧠</span> AI Coach <em class="ai-dot"></em></button>
+      <button class="nav-btn" data-page="planner"><span>📅</span> Weekly Plan</button>
+      <button class="nav-btn" data-page="progress"><span>📊</span> Progress &amp; Stats</button>
+      <div class="nav-label">Fuel</div>
+      <button class="nav-btn" data-page="diet"><span>🥗</span> Diet Plan</button>
+      <button class="nav-btn" data-page="water"><span>💧</span> Water &amp; Habits</button>
+      <div class="nav-label">Tools</div>
+      <button class="nav-btn" data-page="guide"><span>📘</span> Exercise Guide</button>
+      <button class="nav-btn" data-page="tools"><span>🧮</span> Body Tools</button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="streak-box">
+        <span>🔥</span>
+        <div>
+          <strong id="streakCount">0</strong>
+          <small>day streak</small>
+        </div>
+      </div>
+      <div class="ai-status" id="aiStatus"><i></i><span>Checking AI…</span></div>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div class="search-wrap">
+        <input type="text" id="searchInput" placeholder="Search exercises, drills, foods… (e.g. sprint, plank, protein)" />
+      </div>
+      <div class="topbar-right">
+        <button class="ask-ai" id="askAiBtn">🧠 Ask AI Coach</button>
+        <div class="date-chip" id="dateChip"></div>
+        <button class="icon-btn" id="themeToggle" title="Toggle theme">🌙</button>
+      </div>
+    </header>
+
+    <div class="content" id="content"><!-- pages injected here --></div>
+  </main>
+
+  <!-- ===== WORKOUT MODAL ===== -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" id="modal">
+      <button class="modal-close" id="modalClose">✕</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- ===== TOAST ===== -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
