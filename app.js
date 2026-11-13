@@ -998,7 +998,7 @@ function diffDots(level){
 }
 
 /* ---------- FAVORITES ---------- */
-let favs = store.get("fav", []);
+let favs = []; /* loaded from store in init() — store is declared later */
 const favId = (k,i) => k+"-"+i;
 function isFav(k,i){ return favs.includes(favId(k,i)); }
 function toggleFav(k,i){
@@ -2228,6 +2228,7 @@ function runSearch(q){
 function init(){
   $("#dateChip").textContent = new Date().toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'});
   $("#streakCount").textContent = streak;
+  favs = store.get("fav", []);
 
   document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",()=>go(b.dataset.page)));
   $("#menuToggle").addEventListener("click",()=>$("#sidebar").classList.toggle("open"));
